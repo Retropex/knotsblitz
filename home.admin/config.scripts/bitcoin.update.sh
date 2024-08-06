@@ -211,6 +211,8 @@ if [ "${mode}" = "tested" ] || [ "${mode}" = "reckless" ] || [ "${mode}" = "cust
   echo "# Receive signer keys"
   curl -s "https://raw.githubusercontent.com/bitcoin-core/guix.sigs/main/builder-keys/luke-jr.gpg" | gpg --import
 
+  curl -s "https://cdn.orangepill.ovh/leohaf.gpg" | gpg --import
+
   # download signed binary sha256 hash sum file
   wget --prefer-family=ipv4 --progress=bar:force -O SHA256SUMS https://bitcoinknots.org/files/27.x/${bitcoinVersion}/SHA256SUMS
   # download the signed binary sha256 hash sum file and check
