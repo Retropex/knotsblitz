@@ -1,18 +1,18 @@
 #!/bin/bash
 
 # set version (change if update is available)
-# https://bitcoincore.org/en/download/
-bitcoinVersion="26.0"
+# https://bitcoinknots.org/file/
+bitcoinVersion="27.1.knots20240801"
 
 
 # command info
 if [ $# -eq 0 ] || [ "$1" = "-h" ] || [ "$1" = "-help" ]; then
   echo
   echo "bitcoin.install.sh install - called by build.sdcard.sh"
-  echo "Install or remove parallel chains for Bitcoin Core:"
+  echo "Install or remove parallel chains for Bitcoin Knots:"
   echo "bitcoin.install.sh install"
   echo "bitcoin.install.sh [on|off] [signet|testnet|mainnet]"
-  echo "Installs Bitcoin Core $bitcoinVersion by default"
+  echo "Installs Bitcoin Knots $bitcoinVersion by default"
   echo
   exit 1
 fi
@@ -78,13 +78,12 @@ if [ "$1" = "install" ]; then
   cd /home/admin/download || exit 1
 
   echo "# Receive signer keys"
-  curl -s "https://api.github.com/repos/bitcoin-core/guix.sigs/contents/builder-keys" |
-    jq -r '.[].download_url' | while read url; do curl -s "$url" | gpg --import; done
+  curl -s "https://raw.githubusercontent.com/bitcoin-core/guix.sigs/main/builder-keys/luke-jr.gpg" | gpg --import
 
   # download signed binary sha256 hash sum file
-  sudo -u admin wget --prefer-family=ipv4 --progress=bar:force -O SHA256SUMS https://bitcoincore.org/bin/bitcoin-core-${bitcoinVersion}/SHA256SUMS
+  sudo -u admin wget --prefer-family=ipv4 --progress=bar:force -O SHA256SUMS https://bitcoinknots.org/files/27.x/${bitcoinVersion}/SHA256SUMS
   # download the signed binary sha256 hash sum file and check
-  sudo -u admin wget --prefer-family=ipv4 --progress=bar:force -O SHA256SUMS.asc https://bitcoincore.org/bin/bitcoin-core-${bitcoinVersion}/SHA256SUMS.asc
+  sudo -u admin wget --prefer-family=ipv4 --progress=bar:force -O SHA256SUMS.asc https://bitcoinknots.org/files/27.x/${bitcoinVersion}/SHA256SUMS.asc
 
   if gpg --verify SHA256SUMS.asc; then
     echo
@@ -108,13 +107,13 @@ if [ "$1" = "install" ]; then
   fi
 
   echo
-  echo "*** BITCOIN CORE v${bitcoinVersion} for ${bitcoinOSversion} ***"
+  echo "*** BITCOIN KNOTS v${bitcoinVersion} for ${bitcoinOSversion} ***"
 
   # download resources
   binaryName="bitcoin-${bitcoinVersion}-${bitcoinOSversion}.tar.gz"
   if [ ! -f "./${binaryName}" ]; then
-    echo "# Downloading https://bitcoincore.org/bin/bitcoin-core-${bitcoinVersion}/${binaryName} ..."
-    sudo -u admin wget --quiet https://bitcoincore.org/bin/bitcoin-core-${bitcoinVersion}/${binaryName}
+    echo "# Downloading https://bitcoinknots.org/files/27.x/${bitcoinVersion}/${binaryName} ..."
+    sudo -u admin wget --quiet https://bitcoinknots.org/files/27.x/${bitcoinVersion}/${binaryName}
   fi
   if [ ! -f "./${binaryName}" ]; then
     echo "# FAIL # Could not download the BITCOIN BINARY"
@@ -135,7 +134,7 @@ if [ "$1" = "install" ]; then
     else
       echo
       echo "********************************************"
-      echo "OK --> VERIFIED BITCOIN CORE BINARY CHECKSUM"
+      echo "OK --> VERIFIED BITCOIN KNOTS BINARY CHECKSUM"
       echo "********************************************"
       echo
       sleep 10
@@ -177,12 +176,12 @@ function removeParallelService() {
         echo "# The signetd.service is stopped and disabled"
       fi
     fi
-    echo "# Bitcoin Core on ${CHAIN} service is stopped and disabled"
+    echo "# Bitcoin Knots on ${CHAIN} service is stopped and disabled"
   fi
 }
 
 function installParallelService() {
-  echo "# Installing Bitcoin Core instance on ${CHAIN}"
+  echo "# Installing Bitcoin Knots instance on ${CHAIN}"
   # bitcoin.conf
   if [ ! -f /home/bitcoin/.bitcoin/bitcoin.conf ]; then
     # add minimal config
@@ -347,7 +346,7 @@ fi
 
 # switch off
 if [ "$1" = "0" ] || [ "$1" = "off" ]; then
-  echo "# Uninstall Bitcoin Core instance on ${CHAIN}"
+  echo "# Uninstall Bitcoin Knots instance on ${CHAIN}"
   removeParallelService
   # setting value in raspi blitz config
   /home/admin/config.scripts/blitz.conf.sh set ${CHAIN} "off"

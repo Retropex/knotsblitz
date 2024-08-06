@@ -2,7 +2,7 @@
 
 # command info
 if [ $# -eq 0 ] || [ "$1" = "-h" ] || [ "$1" = "-help" ]; then
-  echo "Interim optional Bitcoin Core updates between RaspiBlitz releases."
+  echo "Interim optional Bitcoin Knots updates between RaspiBlitz releases."
   echo "bitcoin.update.sh [info|tested|reckless|custom]"
   echo "info -> get actual state and possible actions"
   echo "tested -> only do a tested update by the RaspiBlitz team"
@@ -20,7 +20,7 @@ echo "# Running: bitcoin.update.sh $*"
 mode="$1"
 
 # RECOMMENDED UPDATE BY RASPIBLITZ TEAM (latest tested version available)
-bitcoinVersion="27.1" # example: 22.0 .. keep empty if no newer version as sd card build is available
+bitcoinVersion="27.1.knots20240801" # example: 22.0 .. keep empty if no newer version as sd card build is available
 
 # GATHER DATA
 # setting download directory to the current user
@@ -42,7 +42,7 @@ installedVersion=$(sudo -u bitcoin bitcoind --version | head -n1 | cut -d" " -f4
 bitcoinUpdateInstalled=$(echo "${installedVersion}" | grep -c "${bitcoinVersion}")
 
 # get latest release from GitHub releases
-bitcoinLatestVersion=$(curl --header "X-GitHub-Api-Version:2022-11-28" -s https://api.github.com/repos/bitcoin/bitcoin/releases | jq -r '.[].tag_name' | sort | tail -n1 | cut -c 2-)
+bitcoinLatestVersion=$(curl --header "X-GitHub-Api-Version:2022-11-28" -s https://api.github.com/repos/bitcoinknots/bitcoin/releases | jq -r '.[].tag_name' | sort | tail -n1 | cut -c 2-)
 
 # INFO
 function displayInfo() {
@@ -54,7 +54,7 @@ function displayInfo() {
   echo "bitcoinUpdateInstalled='${bitcoinUpdateInstalled}'"
   echo "bitcoinVersion='${bitcoinVersion}'"
 
-  echo "# reckless update option (latest Bitcoin Core release from GitHub)"
+  echo "# reckless update option (latest Bitcoin Knots release from GitHub)"
   echo "bitcoinLatestVersion='${bitcoinLatestVersion}'"
 }
 
@@ -155,7 +155,7 @@ elif [ "${mode}" = "custom" ]; then
   else
     clear
     echo
-    echo "# Update Bitcoin Core to a chosen version."
+    echo "# Update Bitcoin Knots to a chosen version."
     echo
     echo "# Input the version you would like to install and press ENTER."
     echo "# Examples (versions below 22.1 are not supported):"
@@ -175,12 +175,12 @@ elif [ "${mode}" = "custom" ]; then
   fi
 
   if curl --output /dev/null --silent --head --fail \
-    https://bitcoincore.org/bin/bitcoin-core-${pathVersion}/SHA256SUMS.asc; then
-    echo "# OK version exists at https://bitcoincore.org/bin/bitcoin-core-${pathVersion}"
+    https://bitcoinknots.org/files/27.x/${pathVersion}/SHA256SUMS.asc; then
+    echo "# OK version exists at https://bitcoinknots.org/files/27.x/${pathVersion}"
     if [ "${mode}" = "custom" ] && [ "$3" = "skipverify" ]; then
       echo "# skipping signature verification"
     fi
-    echo "# Press ENTER to proceed to install Bitcoin Core $bitcoinVersion or CTRL+C to abort."
+    echo "# Press ENTER to proceed to install Bitcoin Knots $bitcoinVersion or CTRL+C to abort."
     read key
   else
     echo "# FAIL $bitcoinVersion does not exist"
@@ -209,13 +209,12 @@ if [ "${mode}" = "tested" ] || [ "${mode}" = "reckless" ] || [ "${mode}" = "cust
   cd "${downloadDir}" || exit 1
 
   echo "# Receive signer keys"
-  curl -s "https://api.github.com/repos/bitcoin-core/guix.sigs/contents/builder-keys" |
-    jq -r '.[].download_url' | while read url; do curl -s "$url" | gpg --import; done
+  curl -s "https://raw.githubusercontent.com/bitcoin-core/guix.sigs/main/builder-keys/luke-jr.gpg" | gpg --import
 
   # download signed binary sha256 hash sum file
-  wget --prefer-family=ipv4 --progress=bar:force -O SHA256SUMS https://bitcoincore.org/bin/bitcoin-core-${bitcoinVersion}/SHA256SUMS
+  wget --prefer-family=ipv4 --progress=bar:force -O SHA256SUMS https://bitcoinknots.org/files/27.x/${bitcoinVersion}/SHA256SUMS
   # download the signed binary sha256 hash sum file and check
-  wget --prefer-family=ipv4 --progress=bar:force -O SHA256SUMS.asc https://bitcoincore.org/bin/bitcoin-core-${bitcoinVersion}/SHA256SUMS.asc
+  wget --prefer-family=ipv4 --progress=bar:force -O SHA256SUMS.asc https://bitcoinknots.org/files/27.x/${bitcoinVersion}/SHA256SUMS.asc
 
   if [ "${mode}" = "custom" ] && [ "$3" = "skipverify" ]; then
     echo "# skipping signature verification"
@@ -238,9 +237,9 @@ if [ "${mode}" = "tested" ] || [ "${mode}" = "reckless" ] || [ "${mode}" = "cust
     fi
   fi
 
-  echo "# Downloading Bitcoin Core v${bitcoinVersion} for ${bitcoinOSversion} ..."
+  echo "# Downloading Bitcoin Knots v${bitcoinVersion} for ${bitcoinOSversion} ..."
   binaryName="bitcoin-${bitcoinVersion}-${bitcoinOSversion}.tar.gz"
-  wget https://bitcoincore.org/bin/bitcoin-core-${pathVersion}/${binaryName}
+  wget https://bitcoinknots.org/files/27.x/${pathVersion}/${binaryName}
   if [ ! -f "./${binaryName}" ]; then
     echo "# FAIL # Downloading BITCOIN BINARY did not succeed."
     exit 1
@@ -257,7 +256,7 @@ if [ "${mode}" = "tested" ] || [ "${mode}" = "reckless" ] || [ "${mode}" = "cust
     exit 1
   else
     echo
-    echo "# OK --> VERIFIED BITCOIN CORE BINARY CHECKSUM IS CORRECT"
+    echo "# OK --> VERIFIED BITCOIN KNOTS BINARY CHECKSUM IS CORRECT"
     echo
   fi
 fi
@@ -277,7 +276,7 @@ if [ "${mode}" = "tested" ] || [ "${mode}" = "reckless" ] || [ "${mode}" = "cust
   sudo systemctl stop tbitcoind 2>/dev/null
   sudo systemctl stop sbitcoind 2>/dev/null
   echo
-  echo "# Installing Bitcoin Core v${bitcoinVersion}"
+  echo "# Installing Bitcoin Knots v${bitcoinVersion}"
   tar -xvf ${binaryName}
   sudo install -m 0755 -o root -g root -t /usr/local/bin/ bitcoin-${bitcoinVersion}/bin/*
   sleep 3
@@ -290,7 +289,7 @@ if [ "${mode}" = "tested" ] || [ "${mode}" = "reckless" ] || [ "${mode}" = "cust
   echo "# mark update in raspiblitz config"
   /home/admin/config.scripts/blitz.conf.sh set bitcoinInterimsUpdate "${bitcoinInterimsUpdateNew}"
 
-  echo "# OK Bitcoin Core ${bitcoinVersion} is installed"
+  echo "# OK Bitcoin Knots ${bitcoinVersion} is installed"
   exit 0
 
 else
